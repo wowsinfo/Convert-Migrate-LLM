@@ -7,7 +7,7 @@ from convert.key import API_KEY
 # engine = Engine.create_lm_studio_engine("codegeex4-all-9b-q4_k_s")
 # engine = Engine.create_lm_studio_engine("codellama-7b.q4_0")
 # engine = Engine.create_lm_studio_engine("qwen2.5-coder-7b-instruct")
-engine = Engine.create_chatgpt_engine(API_KEY, "gpt-4o-mini-2024-07-18", EngineConfig(max_tokens=None))
+engine = Engine.create_chatgpt_engine(API_KEY, "gpt-5-mini", EngineConfig(max_tokens=None))
 backend = PythonBackend("Julia")
 transpiler = Transpiler(
     engine,

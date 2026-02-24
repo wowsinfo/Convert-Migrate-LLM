@@ -5,7 +5,7 @@ from dataclasses import dataclass
 @dataclass
 class EngineConfig:
     max_tokens: int = 2048
-    temperature: float = 0.1
+    temperature: float = 0
     top_p: float = 1
     repetition_penalty: float = 0
 
@@ -28,7 +28,7 @@ class Engine:
     ):
         self.openai = OpenAI(api_key=api_key, base_url=host_url)
         self.model_name = model_name
-        self.config = config
+        self.config = config or EngineConfig()
 
     # region Factory methods
 
@@ -56,26 +56,17 @@ class Engine:
     # endregion
     # region functions
 
-    def get_chat_response(self, prompt: str):
+    def get_chat_response(self, prompt: str, system_prompt: str = None):
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
         response = self.openai.chat.completions.create(
             model=self.model_name,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                },
-                # {
-                #     "role": "system",
-                #     "content": rules,
-                # },
-                # {
-                #     "role": "assistant",
-                #     "content": r"```\n{insert code here}\n```",
-                # },
-            ],
+            messages=messages,
             max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
-            top_p=self.config.temperature,
+            top_p=self.config.top_p,
             presence_penalty=self.config.repetition_penalty,
             frequency_penalty=self.config.repetition_penalty,
         )
@@ -90,7 +81,7 @@ class Engine:
             prompt=prompt,
             max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
-            top_p=self.config.temperature,
+            top_p=self.config.top_p,
         )
         return response.choices[0].text.strip()
 

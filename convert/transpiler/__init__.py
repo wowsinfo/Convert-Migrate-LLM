@@ -3,6 +3,12 @@ from ..engine import Engine
 from ..post_processing import PostProcessing
 from time import sleep
 
+_MAX_RETRIES = 3
+_RETRY_PROMPT = (
+    "\n###\nYour previous response did not contain a fenced code block. "
+    "Output ONLY the translated code inside a single fenced code block (```)."
+)
+
 
 class Transpiler:
     """
@@ -17,12 +23,12 @@ class Transpiler:
         engine: Engine,
         backend: Backend,
         custom_rules: str = None,
-        post_processing: list[PostProcessing] = [],
+        post_processing: list[PostProcessing] = None,
     ):
         self.engine = engine
         self.backend = backend
         self.custom_rules = custom_rules
-        self.post_processing = post_processing
+        self.post_processing = list(post_processing) if post_processing else []
 
     def switch_engine(self, engine: Engine):
         self.engine = engine
@@ -41,6 +47,23 @@ class Transpiler:
 
     # region Transpile
 
+    def _translate_part(self, prompt: str, system_prompt: str) -> str:
+        """
+        Send a prompt to the engine and parse the code block.
+        Retries with corrective feedback up to _MAX_RETRIES times on parse failure.
+        """
+        current_prompt = prompt
+        for attempt in range(_MAX_RETRIES):
+            response = self.engine.get_chat_response(current_prompt, system_prompt)
+            sleep(0.2)
+            try:
+                return self.backend.parse_codeblock(response)
+            except ValueError:
+                if attempt < _MAX_RETRIES - 1:
+                    current_prompt = prompt + _RETRY_PROMPT
+                else:
+                    raise
+
     def convert_code(self, code: str) -> str:
         """
         Convert the code from one language to another
@@ -49,16 +72,14 @@ class Transpiler:
         if self.custom_rules:
             rules += self.custom_rules
 
+        system_prompt = self.backend.build_system_prompt()
         transpile_parts = []
         for part in self.backend.break_down(code):
             prompt = part + rules
             try:
-                converted_parts = self.engine.get_chat_response(prompt)
-                sleep(0.2)
-                transpile_parts.append(self.backend.parse_codeblock(converted_parts))
+                transpile_parts.append(self._translate_part(prompt, system_prompt))
             except ValueError:
-                converted_parts = "===>>> review manually\n" + part + "\n<<<===\n"
-                transpile_parts.append(converted_parts)
+                transpile_parts.append("===>>> review manually\n" + part + "\n<<<===\n")
 
         before_processing = self.backend.merge_code(transpile_parts)
         after_processing = before_processing
