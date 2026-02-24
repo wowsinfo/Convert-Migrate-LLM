@@ -23,12 +23,12 @@ class Transpiler:
         engine: Engine,
         backend: Backend,
         custom_rules: str = None,
-        post_processing: list[PostProcessing] = [],
+        post_processing: list[PostProcessing] = None,
     ):
         self.engine = engine
         self.backend = backend
         self.custom_rules = custom_rules
-        self.post_processing = post_processing
+        self.post_processing = list(post_processing) if post_processing else []
 
     def switch_engine(self, engine: Engine):
         self.engine = engine

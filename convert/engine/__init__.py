@@ -28,7 +28,7 @@ class Engine:
     ):
         self.openai = OpenAI(api_key=api_key, base_url=host_url)
         self.model_name = model_name
-        self.config = config
+        self.config = config or EngineConfig()
 
     # region Factory methods
 
@@ -81,7 +81,7 @@ class Engine:
             prompt=prompt,
             max_tokens=self.config.max_tokens,
             temperature=self.config.temperature,
-            top_p=self.config.temperature,
+            top_p=self.config.top_p,
         )
         return response.choices[0].text.strip()
 

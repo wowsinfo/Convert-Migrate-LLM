@@ -30,5 +30,5 @@ class ProjectMigration:
                     + self.output_format
                 )
                 os.makedirs(os.path.dirname(output_file), exist_ok=True)
-                with open(output_file, "w", encoding="utf-8") as file:
-                    file.write(output)
+                with open(output_file, "w", encoding="utf-8") as out_file:
+                    out_file.write(output)

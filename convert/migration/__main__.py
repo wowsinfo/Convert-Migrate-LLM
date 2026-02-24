@@ -11,7 +11,7 @@ from . import ProjectMigration
 # )
 engine = Engine.create_chatgpt_engine(
     API_KEY,
-    "gpt-4o",
+    "gpt-5-mini",
     EngineConfig(max_tokens=None),
 )
 backend = ReactNativeBackend("Flutter", tab_size=2)
